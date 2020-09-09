@@ -48,12 +48,12 @@ class MemoryDump:
                                   })
             return
 
-        # Determine profile using 'imageinfo' plugin
+        # Determine profile using 'kdbgscan' plugin
         self.logger.info({'_action': whoami(),
-                          'message': "Determining Volatility profile for {} using 'imageinfo' plugin.".format(
+                          'message': "Determining Volatility profile for {} using 'kdbgscan' plugin.".format(
                               self.memory_path.name)})
         self.profile = None
-        command = '{0} -f "{1}" imageinfo'.format(VOLATILITY_PATH.as_posix(), self.memory_path.as_posix())
+        command = '{0} -f "{1}" kdbgscan'.format(VOLATILITY_PATH.as_posix(), self.memory_path.as_posix())
         args = shlex.split(command)
         try:
            proc = run_command(args, timeout=volatility_default_timeout)
@@ -62,13 +62,29 @@ class MemoryDump:
         else:
             outs, errs = proc.stdout, proc.stderr
             output_list = outs.splitlines()
+            version, build, profile = "","",""
             for single_line in output_list:
-                result = re.match(r'Suggested Profile\(s\) : (.+)', single_line.strip())
+                if "Profile suggestion" in single_line:
+                  profile_filter = r'Profile suggestion[^:]*: ([^\n]*)'
+                  matches = re.finditer(profile_filter, single_line, re.MULTILINE)
+                  for matchNum, match in enumerate(matches, start=1):
+                    profile = match[1]
+            
+                if "Minor:" in single_line:
+                  version_filter = r'Minor: ([0-9]{3,9})'
+                  matches = re.finditer(version_filter, single_line, re.MULTILINE)
+                  for matchNum, match in enumerate(matches, start=1):
+                    version = match[1]
+            
+                if "Build string" in single_line:
+                  build_filter = r'Build string[^:]*: ([^.]*)'
+                  matches = re.finditer(build_filter, single_line, re.MULTILINE)
+                  for matchNum, match in enumerate(matches, start=1):
+                    build = match[1]
 
-                if result:
-                    self.profile = result.groups(0)[0].split(',')[0].strip() \
-                        if result.groups(0)[0].count("No suggestion") == 0 else None
-                    break
+                if version != "" and version in profile:
+                  self.profile = profile
+                  break
 
             if self.profile:
                 self.logger.info({'_action': whoami(),
