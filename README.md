@@ -2,7 +2,7 @@
 A tool to automate processing of memory dumps using Volatility.
 
 ## Features
-1. Monitor one or more folders for memory images and process automatically using global and override configurations.  Memory images are detected using file extension, which is configurable.
+1. Monitor one or more folders (named like 'SIRXXXXXX') for memory images and process automatically using global and override configurations.  Memory images are detected using file extension, which is configurable.
 2. Supports raw and hpak memory image formats.  Code can be easily extended to add support for other formats.
 3. Allows plugin selection and configuration at a global and case ID level.  Case ID may contain one or more memory images.  Plugins can also be excluded at a global or case ID level.
 4. Plugin results are written to disk (within case ID folder) and optionally can be sent to Splunk.  Code can be easily extended to support other SIEMs.
@@ -10,7 +10,7 @@ A tool to automate processing of memory dumps using Volatility.
     * Splunk events are created using CaseID:Plugin source so it is easy to search, correlate, alert etc.
     * If events are larger than a configurable Splunk event size threshold, a place holder event is created with reference to plugin output results on disk.
     * If JSON format is supported and enabled for a plugin, Splunk events are created as such.  Default is 'text' format.
-6. Image profile is detected using 'imageinfo' plugin and profile is cached to speed up re-processing.
+6. Image profile is detected using 'kdbgscan' plugin and profile is cached to speed up re-processing.
 7. Image profile detection can be overridden by dropping a '.profile' file specifying the Volatility profile in the case ID folder.
 8. Script dictates use of a case ID folder structure.  Case ID format is configurable.  Images found outside of a case ID folders are ignored.
 9. Upon successful completion, '.processed' flag is dropped to avoid accidental re-processing.
